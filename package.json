@@ -1,0 +1,93 @@
+{
+  "name": "mongoose-encrypt-fields",
+  "version": "1.0.0",
+  "description": "A Mongoose plugin and a custom schemaType to encrypt and decrypt individual fields in Nest.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm build",
+    "test": "rimraf coverage && jest --coverage --runInBand"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/naver/mongoose-field-encryption"
+  },
+  "keywords": [
+    "nestjs",
+    "mongoose",
+    "encryption"
+  ],
+  "author": "Hyunjin Jeong <hyunjin.jeong@navercorp.com> (https://github.com/hyunjinjeong)",
+  "license": "MIT",
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{yaml,html,json,md}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "4.4.22"
+    }
+  },
+  "dependencies": {
+    "@nestjs/mongoose": ">=10.0.0",
+    "mongoose": ">=7.3.4",
+    "mpath": "^0.9.0"
+  },
+  "devDependencies": {
+    "@jest/types": "^29.6.1",
+    "@nestjs/common": "^10.1.3",
+    "@nestjs/config": "^3.0.0",
+    "@nestjs/core": "^10.1.3",
+    "@nestjs/mongoose": "^10.0.4",
+    "@nestjs/platform-express": "^10.1.3",
+    "@nestjs/testing": "^10.1.3",
+    "@types/jest": "^29.5.3",
+    "@types/node": "^18.17.5",
+    "@types/supertest": "^2.0.12",
+    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "@typescript-eslint/parser": "^6.3.0",
+    "eslint": "^8.47.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "husky": "^8.0.3",
+    "jest": "^29.6.2",
+    "lint-staged": "^14.0.0",
+    "mongodb-memory-server": "^8.14.0",
+    "mongoose": "^7.6.8",
+    "prettier": "^3.0.1",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^5.0.1",
+    "rxjs": "^7.8.1",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  },
+  "bugs": {
+    "url": "https://github.com/naver/mongoose-field-encryption/issues"
+  },
+  "homepage": "https://github.com/naver/mongoose-field-encryption#readme",
+  "directories": {
+    "example": "test/app/database/schemas",
+    "lib": "lib",
+    "test": "test"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  }
+}
