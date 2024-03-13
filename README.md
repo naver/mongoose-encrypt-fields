@@ -39,7 +39,7 @@ The plugin provides the `EncryptedString` [SchemaType](https://mongoosejs.com/do
 
 ```typescript
 import { Schema as MongooseSchema } from 'mongoose'
-import { EncryptedString } from '@naver/mongoose-field-encryption'
+import { EncryptedString } from 'mongoose-encrypt-fields'
 import { Schema } from 'mongoose' // Also accessible as Schema.Types.EncryptedString
 ```
 
