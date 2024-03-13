@@ -110,7 +110,7 @@ To apply the plugin to a schema, call the `.plugin()` method on the desired sche
 
 ```typescript
 import { Prop, Schema, SchemaFactory, MongooseModule } from '@nestjs/mongoose'
-import { mongooseFieldEncryption } from '@pup/mongoose-field-encryption'
+import { mongooseFieldEncryption } from '@pup/mongoose-encrypt-fields'
 
 @Schema()
 export class User {
@@ -270,8 +270,10 @@ Encryption for Aggregate is not supported.
 
 ## License
 
+mongoose-encrypt-fields in released under the [MIT license](https://github.com/naver/mongoose-encrypt-fields/blob/main/LICENSE).
+
 ```
-mongoose-field-encryption
+mongoose-encrypt-fields
 Copyright 2024-present NAVER Corp.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

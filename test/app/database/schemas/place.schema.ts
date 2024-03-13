@@ -1,5 +1,5 @@
 /**
- * mongoose-field-encryption
+ * mongoose-encrypt-fields
  * Copyright (c) 2024-present NAVER Corp.
  * MIT license
  */
