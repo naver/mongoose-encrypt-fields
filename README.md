@@ -86,13 +86,13 @@ However, if you apply the plugin described later, this part can be omitted.
 - `isEncrypted`: Function to determine if a string is encrypted
 
 ```typescript
-const myEncrypt = (value: string) => {
+const myEncrypt = (value: string): string => {
   // logic
 }
-const myDecrypt = (value: string) => {
+const myDecrypt = (value: string): string => {
   // logic
 }
-const myIsEncrypted = (value: string) => {
+const myIsEncrypted = (value: string): boolean => {
   // logic
 }
 
