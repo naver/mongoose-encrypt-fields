@@ -15,6 +15,7 @@ import { PlaceCheckIn } from './app/database/schemas/check-in.place.schema'
 import { CheckIn, CheckInType } from './app/database/schemas/check-in.schema'
 import { getPUPDBModelToken, getReceiptDBModelToken } from './app/database/schemas'
 import { JobType, KRUpdatePaymentUserJob, UserJob } from './app/database/schemas/user-job.schema'
+import { NonJsonType } from './app/database/schemas/non-json-type.schema'
 import { encrypt } from './app/crypto'
 
 /**
@@ -28,6 +29,7 @@ describe('[plugin] lean', () => {
   let gpsCheckInModel: Model<GPSCheckIn>
   let placeCheckInModel: Model<PlaceCheckIn>
   let userJobModel: Model<UserJob>
+  let nonJsonTypeModel: Model<NonJsonType>
 
   beforeAll(() => {
     userModel = rootModule.get(getPUPDBModelToken(User.name))
@@ -37,6 +39,7 @@ describe('[plugin] lean', () => {
     gpsCheckInModel = rootModule.get(getReceiptDBModelToken(GPSCheckIn.name))
     placeCheckInModel = rootModule.get(getReceiptDBModelToken(PlaceCheckIn.name))
     userJobModel = rootModule.get(getReceiptDBModelToken(UserJob.name))
+    nonJsonTypeModel = rootModule.get(getPUPDBModelToken(NonJsonType.name))
   })
 
   let themelistDoc: ThemelistDocument
@@ -81,6 +84,7 @@ describe('[plugin] lean', () => {
     expect(gpsCheckInModel).toBeDefined()
     expect(placeCheckInModel).toBeDefined()
     expect(userJobModel).toBeDefined()
+    expect(nonJsonTypeModel).toBeDefined()
   })
 
   it('should work with findOne()', async () => {
@@ -154,6 +158,26 @@ describe('[plugin] lean', () => {
     expect(userLeanDoc?.createdDateTime).toEqual('2024-03-01T00:00:00+09:00')
   })
 
+  it('should decrypt non-JSON types', async () => {
+    // Given
+    const obj: NonJsonType = {
+      oid: new Types.ObjectId(),
+      date: new Date(),
+      sub: {
+        oid: new Types.ObjectId(),
+        date: new Date(),
+      },
+    }
+    const nonJsonType = new NonJsonType(obj)
+    const doc = await nonJsonTypeModel.create(nonJsonType)
+
+    // When
+    const leanDoc = await nonJsonTypeModel.findOne({ _id: doc._id }).lean()
+
+    // Then
+    expect(leanDoc).toEqual({ ...obj, _id: expect.any(Types.ObjectId), __v: 0 })
+  })
+
   describe('discriminator', () => {
     it('should work with top-level discriminator', async () => {
       // Given
@@ -213,7 +237,7 @@ describe('[plugin] lean', () => {
       const result = (await themelistModel.findOneAndUpdate(
         { _id: themelistDoc._id },
         { $set: { 'user.uniqueId': encrypt('updatedUniqueId') } },
-        { lean: true, rawResult: true, returnDocument: 'after' },
+        { lean: true, includeResultMetadata: true, returnDocument: 'after' },
       )) as any
 
       // Then
@@ -244,14 +268,6 @@ describe('[plugin] lean', () => {
       expect(deletedDoc?.user.uniqueId).toEqual('uniqueId')
     })
 
-    it('should work with findOneAndRemove()', async () => {
-      // When
-      const deletedDoc = await themelistModel.findOneAndRemove({ _id: themelistDoc._id }).lean()
-
-      // Then
-      expect(deletedDoc?.user.uniqueId).toEqual('uniqueId')
-    })
-
     it('should work with findOneAndUpdate() and base fields of discriminator', async () => {
       // Given
       const userJob = new KRUpdatePaymentUserJob({ _id: new Types.ObjectId(), uniqueId: 'hello' }, '2024-02')
@@ -261,7 +277,7 @@ describe('[plugin] lean', () => {
       const result = (await userJobModel.findOneAndUpdate(
         { 'user.uniqueId': 'hello' },
         { $set: { 'user.uniqueId': 'updatedUniqueId' } },
-        { lean: true, upsert: true, returnDocument: 'after', rawResult: true },
+        { lean: true, upsert: true, returnDocument: 'after', includeResultMetadata: true },
       )) as any
 
       // Then
@@ -279,7 +295,7 @@ describe('[plugin] lean', () => {
       const result = (await userJobModel.findOneAndReplace(
         { 'user.uniqueId': 'hello' },
         { type: JobType.KR_UPDATE_PAYMENTS, user: { _id: new Types.ObjectId(), uniqueId: 'updatedUniqueId' } },
-        { lean: true, upsert: true, returnDocument: 'after', rawResult: true },
+        { lean: true, upsert: true, returnDocument: 'after', includeResultMetadata: true },
       )) as any
 
       // Then

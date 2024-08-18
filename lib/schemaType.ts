@@ -4,6 +4,7 @@
  * MIT license
  */
 
+import { EJSON } from 'bson'
 import { randomUUID } from 'crypto'
 import mongoose, { Mongoose, SchemaOptions, SchemaType, model, Model, Document, Schema } from 'mongoose'
 import { Schema as NestJsSchema, Prop, SchemaFactory } from '@nestjs/mongoose'
@@ -116,7 +117,7 @@ export class EncryptedString extends SchemaType {
     const castedValue = tempDoc.toObject()[this.path]
     return this.originalType === String
       ? EncryptedString.encrypt(castedValue)
-      : EncryptedString.encrypt(JSON.stringify(castedValue))
+      : EncryptedString.encrypt(EJSON.stringify(castedValue, { relaxed: true }))
   }
 
   /** Decrypt given value. Unencrypted values are returned as is. */
@@ -126,7 +127,7 @@ export class EncryptedString extends SchemaType {
     }
 
     const decryptedValue = EncryptedString.decrypt(value)
-    const decryptedObj = this.originalType === String ? decryptedValue : JSON.parse(decryptedValue)
+    const decryptedObj = this.originalType === String ? decryptedValue : EJSON.parse(decryptedValue, { relaxed: true })
 
     if (isLean) {
       return decryptedObj

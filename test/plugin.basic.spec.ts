@@ -19,6 +19,7 @@ import { SubShardKey } from './app/database/schemas/sub-shard-key.schema'
 import { MultipleType } from './app/database/schemas/multiple-type.schema'
 import { Place } from './app/database/schemas/place.schema'
 import { decrypt, encrypt } from './app/crypto'
+import { NonJsonType } from './app/database/schemas/non-json-type.schema'
 
 /**
  * basic encryption/decryption test on save and find
@@ -32,6 +33,7 @@ describe('[plugin] encrypt/decrypt', () => {
   let subShardKeyModel: Model<SubShardKey>
   let multipleTypeModel: Model<MultipleType>
   let placeModel: Model<Place>
+  let nonJsonTypeModel: Model<NonJsonType>
 
   beforeAll(() => {
     userModel = rootModule.get(getPUPDBModelToken(User.name))
@@ -42,6 +44,7 @@ describe('[plugin] encrypt/decrypt', () => {
     visitModel = rootModule.get(getReceiptDBModelToken(Visit.name))
     checkInModel = rootModule.get(getReceiptDBModelToken(CheckIn.name))
     subShardKeyModel = rootModule.get(getReceiptDBModelToken(SubShardKey.name))
+    nonJsonTypeModel = rootModule.get(getPUPDBModelToken(NonJsonType.name))
   })
 
   beforeEach(() => {
@@ -57,6 +60,7 @@ describe('[plugin] encrypt/decrypt', () => {
     expect(subShardKeyModel).toBeDefined()
     expect(multipleTypeModel).toBeDefined()
     expect(placeModel).toBeDefined()
+    expect(nonJsonTypeModel).toBeDefined()
   })
 
   it('should encrypt/decrypt top-level fields', async () => {
@@ -285,6 +289,27 @@ describe('[plugin] encrypt/decrypt', () => {
 
     updatedRawDoc = await userModel.collection.findOne({ _id: foundDoc._id })
     expect(updatedRawDoc?.coordinates).toEqual(encrypt(JSON.stringify([123, 456])))
+  })
+
+  it('should encrypt/decrypt non JSON-native types', async () => {
+    // Given
+    const obj: NonJsonType = {
+      oid: new Types.ObjectId(),
+      date: new Date(),
+      sub: {
+        oid: new Types.ObjectId(),
+        date: new Date(),
+      },
+    }
+    const nonJsonType = new NonJsonType(obj)
+
+    // When
+    const doc = await nonJsonTypeModel.create(nonJsonType)
+    const foundDoc = await nonJsonTypeModel.findOne({ _id: doc._id })
+
+    // Then
+    expect(doc.toObject()).toEqual({ ...obj, _id: expect.any(Types.ObjectId), __v: 0 })
+    expect(foundDoc?.toObject()).toEqual({ ...obj, _id: expect.any(Types.ObjectId), __v: 0 })
   })
 
   describe('bulk operations', () => {

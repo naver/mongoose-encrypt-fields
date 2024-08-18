@@ -304,12 +304,12 @@ describe('[plugin] find, update queries', () => {
       expect(result?.user.uniqueId).toEqual('updatedUniqueId')
     })
 
-    it('should work with findOneAndUpdate() with rawResult: true option', async () => {
+    it('should work with findOneAndUpdate() with includeResultMetadata: true option', async () => {
       // Given
       const result = await themelistModel.findOneAndUpdate(
         { 'reviews.subUser.uniqueId': 'uniqueId' },
         { $set: { 'user.uniqueId': 'updatedUniqueId' } },
-        { rawResult: true, returnDocument: 'after' },
+        { includeResultMetadata: true, returnDocument: 'after' },
       )
 
       // When
@@ -349,17 +349,6 @@ describe('[plugin] find, update queries', () => {
     it('should work with findOneAndDelete()', async () => {
       // Given
       await userModel.findOneAndDelete({ uniqueId: 'uniqueId' })
-
-      // When
-      const rawUser = await userModel.collection.findOne({ uniqueId: encrypt('uniqueId') })
-
-      // Then
-      expect(rawUser).toBeNull()
-    })
-
-    it('should work with findOneAndRemove()', async () => {
-      // Given
-      await userModel.findOneAndRemove({ uniqueId: 'uniqueId' })
 
       // When
       const rawUser = await userModel.collection.findOne({ uniqueId: encrypt('uniqueId') })
