@@ -45,7 +45,9 @@ import { Schema } from 'mongoose' // Also accessible as Schema.Types.EncryptedSt
 
 Specify the field's `type` as `EncryptedString`. If the original type is not String, specify the original type in the `originalType` field.
 
-Non-string fields are encrypted and decrypted using `JSON.stringify()` and `JSON.parse()`.
+Non-string fields are encrypted and decrypted using `EJSON.stringify()` and `EJSON.parse()` with `{ relaxed: true }`. For more information, check the [MongoDB Extended JSON format](https://www.mongodb.com/docs/manual/reference/mongodb-extended-json/).
+
+This behavior is the same as the PyMongo's [json_util](https://pymongo.readthedocs.io/en/stable/api/bson/json_util.html).
 
 ```typescript
 @Schema()
