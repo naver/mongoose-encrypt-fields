@@ -7,9 +7,9 @@
 import { Schema } from 'mongoose'
 
 export interface MongooseFieldEncryptionOptions {
-  /** String encryption function. If `originalType` is not `String`, this function is called as `encrypt(JSON.stringify(value))` */
+  /** String encryption function. If `originalType` is not `String`, this function is called as `encrypt(EJSON.stringify(value))` with `{ relaxed: true }` */
   encrypt: (value: string) => string
-  /** String decryption function. If `originalType` is not `String`, this function is called as `JSON.parse(decrypt(value))` */
+  /** String decryption function. If `originalType` is not `String`, this function is called as `EJSON.parse(decrypt(value))` with `{ relaxed: true }` */
   decrypt: (value: string) => string
   /** Check if given string is encrypted. */
   isEncrypted: (value: string) => boolean
