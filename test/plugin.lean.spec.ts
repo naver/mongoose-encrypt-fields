@@ -213,7 +213,7 @@ describe('[plugin] lean', () => {
       const result = (await themelistModel.findOneAndUpdate(
         { _id: themelistDoc._id },
         { $set: { 'user.uniqueId': encrypt('updatedUniqueId') } },
-        { lean: true, rawResult: true, returnDocument: 'after' },
+        { lean: true, includeResultMetadata: true, returnDocument: 'after' },
       )) as any
 
       // Then
@@ -244,14 +244,6 @@ describe('[plugin] lean', () => {
       expect(deletedDoc?.user.uniqueId).toEqual('uniqueId')
     })
 
-    it('should work with findOneAndRemove()', async () => {
-      // When
-      const deletedDoc = await themelistModel.findOneAndRemove({ _id: themelistDoc._id }).lean()
-
-      // Then
-      expect(deletedDoc?.user.uniqueId).toEqual('uniqueId')
-    })
-
     it('should work with findOneAndUpdate() and base fields of discriminator', async () => {
       // Given
       const userJob = new KRUpdatePaymentUserJob({ _id: new Types.ObjectId(), uniqueId: 'hello' }, '2024-02')
@@ -261,7 +253,7 @@ describe('[plugin] lean', () => {
       const result = (await userJobModel.findOneAndUpdate(
         { 'user.uniqueId': 'hello' },
         { $set: { 'user.uniqueId': 'updatedUniqueId' } },
-        { lean: true, upsert: true, returnDocument: 'after', rawResult: true },
+        { lean: true, upsert: true, returnDocument: 'after', includeResultMetadata: true },
       )) as any
 
       // Then
@@ -279,7 +271,7 @@ describe('[plugin] lean', () => {
       const result = (await userJobModel.findOneAndReplace(
         { 'user.uniqueId': 'hello' },
         { type: JobType.KR_UPDATE_PAYMENTS, user: { _id: new Types.ObjectId(), uniqueId: 'updatedUniqueId' } },
-        { lean: true, upsert: true, returnDocument: 'after', rawResult: true },
+        { lean: true, upsert: true, returnDocument: 'after', includeResultMetadata: true },
       )) as any
 
       // Then
