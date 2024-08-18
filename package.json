@@ -1,6 +1,6 @@
 {
   "name": "mongoose-encrypt-fields",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A Mongoose plugin and a custom schemaType to encrypt and decrypt individual fields in Nest.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
