@@ -16,6 +16,7 @@ import { SubShardKeyModelModule } from './sub-shard-key.schema'
 import { MultipleTypeModelModule } from './multiple-type.schema'
 import { UserJobModelModule } from './user-job.schema'
 import { PlaceModelModule } from './place.schema'
+import { NonJsonTypeModelModule } from './non-json-type.schema'
 
 export const createSchemaModules: () => DynamicModule[] = () => [
   UserModelModule,
@@ -28,6 +29,7 @@ export const createSchemaModules: () => DynamicModule[] = () => [
   MultipleTypeModelModule,
   UserJobModelModule,
   PlaceModelModule,
+  NonJsonTypeModelModule,
 ]
 
 export function getPUPDBModelToken(model: string) {
