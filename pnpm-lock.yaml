@@ -10,9 +10,9 @@ importers:
     dependencies:
       '@nestjs/mongoose':
         specifier: '>=10.0.0'
-        version: 10.0.4(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/platform-express@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1))(mongoose@8.2.1(@aws-sdk/credential-providers@3.529.1)(socks@2.8.1))(rxjs@7.8.1)
+        version: 10.0.4(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3)(mongoose@8.2.1(@aws-sdk/credential-providers@3.529.1)(socks@2.8.1))(rxjs@7.8.1)
       bson:
-        specifier: ^6.8.0
+        specifier: '>=4.0.0'
         version: 6.8.0
       mongoose:
         specifier: '>=7.3.4'
@@ -38,7 +38,7 @@ importers:
         version: 10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3)
       '@nestjs/testing':
         specifier: ^10.1.3
-        version: 10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/platform-express@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/platform-express@10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3))
+        version: 10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3)(@nestjs/platform-express@10.3.3)
       '@types/jest':
         specifier: ^29.5.3
         version: 29.5.12
@@ -185,7 +185,7 @@ packages:
     engines: {node: '>=14.0.0'}
 
   '@aws-sdk/credential-providers@3.529.1':
-    resolution: {integrity: sha512-M85w4w5HU/nSaf8OSOV61sFFvQGn97dsGt8TcEJhx/s8d44coE+DGo9qCKdsG6B4dRQtl1NJmaFXNYl089JKRQ==, tarball: https://artifactory.navercorp.com:443/artifactory/api/npm/npm-naver/@aws-sdk/credential-providers/-/credential-providers-3.529.1.tgz}
+    resolution: {integrity: sha512-M85w4w5HU/nSaf8OSOV61sFFvQGn97dsGt8TcEJhx/s8d44coE+DGo9qCKdsG6B4dRQtl1NJmaFXNYl089JKRQ==}
     engines: {node: '>=14.0.0'}
 
   '@aws-sdk/middleware-host-header@3.523.0':
@@ -626,7 +626,7 @@ packages:
     hasBin: true
 
   '@pkgjs/parseargs@0.11.0':
-    resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==, tarball: https://artifactory.navercorp.com:443/artifactory/api/npm/npm-naver/@pkgjs/parseargs/-/parseargs-0.11.0.tgz}
+    resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
   '@pkgr/core@0.1.1':
@@ -1093,11 +1093,11 @@ packages:
     resolution: {integrity: sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==}
 
   bson@4.7.2:
-    resolution: {integrity: sha512-Ry9wCtIZ5kGqkJoi6aD8KjxFZEx78guTQDnpXWiNthsxzrxAK/i8E6pCHAIZTbaEFWcOCvbecMukfK7XUvyLpQ==, tarball: https://artifactory.navercorp.com:443/artifactory/api/npm/npm-naver/bson/-/bson-4.7.2.tgz}
+    resolution: {integrity: sha512-Ry9wCtIZ5kGqkJoi6aD8KjxFZEx78guTQDnpXWiNthsxzrxAK/i8E6pCHAIZTbaEFWcOCvbecMukfK7XUvyLpQ==}
     engines: {node: '>=6.9.0'}
 
   bson@6.8.0:
-    resolution: {integrity: sha512-iOJg8pr7wq2tg/zSlCCHMi3hMm5JTOxLTagf3zxhcenHsFp+c6uOs6K7W5UE7A4QIJGtqh/ZovFNMP4mOPJynQ==, tarball: https://artifactory.navercorp.com:443/artifactory/api/npm/npm-naver/bson/-/bson-6.8.0.tgz}
+    resolution: {integrity: sha512-iOJg8pr7wq2tg/zSlCCHMi3hMm5JTOxLTagf3zxhcenHsFp+c6uOs6K7W5UE7A4QIJGtqh/ZovFNMP4mOPJynQ==}
     engines: {node: '>=16.20.1'}
 
   buffer-crc32@0.2.13:
@@ -1576,8 +1576,9 @@ packages:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
   fsevents@2.3.3:
-    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==, tarball: https://artifactory.navercorp.com:443/artifactory/api/npm/npm-naver/fsevents/-/fsevents-2.3.3.tgz}
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
@@ -3843,7 +3844,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@nestjs/mongoose@10.0.4(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/platform-express@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1))(mongoose@8.2.1(@aws-sdk/credential-providers@3.529.1)(socks@2.8.1))(rxjs@7.8.1)':
+  '@nestjs/mongoose@10.0.4(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3)(mongoose@8.2.1(@aws-sdk/credential-providers@3.529.1)(socks@2.8.1))(rxjs@7.8.1)':
     dependencies:
       '@nestjs/common': 10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@nestjs/core': 10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/platform-express@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1)
@@ -3862,7 +3863,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@nestjs/testing@10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/platform-express@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/platform-express@10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3))':
+  '@nestjs/testing@10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.3.3)(@nestjs/platform-express@10.3.3)':
     dependencies:
       '@nestjs/common': 10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@nestjs/core': 10.3.3(@nestjs/common@10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/platform-express@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1)

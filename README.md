@@ -197,6 +197,20 @@ await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{}] } })
 await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{ phoneNumber: 1234 }] } })
 ```
 
+### Encryption Mode
+
+Each field can have a different encryption mode. The encryption mode can be set using the `encryptionMode` option. It supports the following modes: `encryptOnly`, `decryptOnly`, and `both`. The default is `both`.
+
+This option is particularly useful if you need to remove encryption from an already encrypted field. By temporarily setting the mode to `decryptOnly`, you can read the encrypted data without encrypting new or updated documents. Once the field update is complete, simply remove the encryption settings entirely.
+
+```typescript
+@Schema()
+export class User {
+  @Prop({ type: EncryptedString, encryptionMode: 'decryptOnly' })
+  uniqueId!: string
+}
+```
+
 ### Discriminator
 
 Mongoose's discriminator feature is also supported. The usage is the same as the basic usage.
@@ -274,7 +288,7 @@ Encryption for Aggregate is not supported.
 
 mongoose-encrypt-fields in released under the [MIT license](https://github.com/naver/mongoose-encrypt-fields/blob/main/LICENSE).
 
-```
+```license
 mongoose-encrypt-fields
 Copyright 2024-present NAVER Corp.
 

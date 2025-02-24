@@ -20,6 +20,7 @@ import { MultipleType } from './app/database/schemas/multiple-type.schema'
 import { Place } from './app/database/schemas/place.schema'
 import { decrypt, encrypt } from './app/crypto'
 import { NonJsonType } from './app/database/schemas/non-json-type.schema'
+import { EncryptionModeTest } from './app/database/schemas/encryption-mode.schema'
 
 /**
  * basic encryption/decryption test on save and find
@@ -34,6 +35,7 @@ describe('[plugin] encrypt/decrypt', () => {
   let multipleTypeModel: Model<MultipleType>
   let placeModel: Model<Place>
   let nonJsonTypeModel: Model<NonJsonType>
+  let encryptionModeTestModel: Model<EncryptionModeTest>
 
   beforeAll(() => {
     userModel = rootModule.get(getPUPDBModelToken(User.name))
@@ -45,6 +47,7 @@ describe('[plugin] encrypt/decrypt', () => {
     checkInModel = rootModule.get(getReceiptDBModelToken(CheckIn.name))
     subShardKeyModel = rootModule.get(getReceiptDBModelToken(SubShardKey.name))
     nonJsonTypeModel = rootModule.get(getPUPDBModelToken(NonJsonType.name))
+    encryptionModeTestModel = rootModule.get(getPUPDBModelToken(EncryptionModeTest.name))
   })
 
   beforeEach(() => {
@@ -61,6 +64,7 @@ describe('[plugin] encrypt/decrypt', () => {
     expect(multipleTypeModel).toBeDefined()
     expect(placeModel).toBeDefined()
     expect(nonJsonTypeModel).toBeDefined()
+    expect(encryptionModeTestModel).toBeDefined()
   })
 
   it('should encrypt/decrypt top-level fields', async () => {
@@ -283,7 +287,7 @@ describe('[plugin] encrypt/decrypt', () => {
     expect(updatedRawDoc?.uniqueId).toEqual(encrypt('updatedUniqueId'))
 
     // When - save
-    // @ts-ignore
+    // @ts-expect-error - test for save()
     foundDoc.coordinates = encrypt(JSON.stringify([123, 456]))
     await foundDoc.save()
 
@@ -660,6 +664,64 @@ describe('[plugin] encrypt/decrypt', () => {
 
       // Then
       expect(foundPlace?.address?.addressElements[0].longName).toBeNull()
+    })
+  })
+
+  describe('encryptionMode', () => {
+    it('should work with encryptOnly', async () => {
+      // Given
+      const doc = await encryptionModeTestModel.create({
+        encryptOnly: 'encryptOnly',
+        encryptOnlyJSON: { lat: 123, long: 456 },
+      })
+
+      // When
+      const foundDoc = await encryptionModeTestModel.findById(doc._id)
+      const rawDoc = await encryptionModeTestModel.collection.findOne({ _id: doc._id })
+
+      // Then
+      expect(doc.encryptOnly).toEqual(encrypt('encryptOnly'))
+      expect(doc.encryptOnlyJSON).toEqual(encrypt(JSON.stringify({ lat: 123, long: 456 })))
+
+      expect(foundDoc?.encryptOnly).toEqual(encrypt('encryptOnly'))
+      expect(foundDoc?.encryptOnlyJSON).toEqual(encrypt(JSON.stringify({ lat: 123, long: 456 })))
+
+      expect(rawDoc?.encryptOnly).toEqual(encrypt('encryptOnly'))
+      expect(rawDoc?.encryptOnlyJSON).toEqual(encrypt(JSON.stringify({ lat: 123, long: 456 })))
+    })
+
+    it('should work with decryptOnly', async () => {
+      // Given
+      const encryptedDoc = await encryptionModeTestModel.create({
+        decryptOnly: encrypt('decryptOnly'),
+        decryptOnlyJSON: encrypt(JSON.stringify({ lat: 123, long: 456 })),
+      })
+      const notEncryptedDoc = await encryptionModeTestModel.create({
+        decryptOnly: 'decryptOnly',
+        decryptOnlyJSON: { lat: 123, long: 456 },
+      })
+
+      // When
+      const foundEncryptedDoc = await encryptionModeTestModel.findById(encryptedDoc._id)
+      const foundNotEncryptedDoc = await encryptionModeTestModel.findById(notEncryptedDoc._id)
+      const rawEncryptedDoc = await encryptionModeTestModel.collection.findOne({ _id: encryptedDoc._id })
+      const rawNotEncryptedDoc = await encryptionModeTestModel.collection.findOne({ _id: notEncryptedDoc._id })
+
+      // Then
+      expect(encryptedDoc.decryptOnly).toEqual('decryptOnly')
+      expect(encryptedDoc.decryptOnlyJSON).toEqual({ lat: 123, long: 456 })
+      expect(notEncryptedDoc.decryptOnly).toEqual('decryptOnly')
+      expect(notEncryptedDoc.decryptOnlyJSON).toEqual({ lat: 123, long: 456 })
+
+      expect(foundEncryptedDoc?.decryptOnly).toEqual('decryptOnly')
+      expect(foundEncryptedDoc?.decryptOnlyJSON).toEqual({ lat: 123, long: 456 })
+      expect(foundNotEncryptedDoc?.decryptOnly).toEqual('decryptOnly')
+      expect(foundNotEncryptedDoc?.decryptOnlyJSON).toEqual({ lat: 123, long: 456 })
+
+      expect(rawEncryptedDoc?.decryptOnly).toEqual(encrypt('decryptOnly'))
+      expect(rawEncryptedDoc?.decryptOnlyJSON).toEqual(encrypt(JSON.stringify({ lat: 123, long: 456 })))
+      expect(rawNotEncryptedDoc?.decryptOnly).toEqual('decryptOnly')
+      expect(rawNotEncryptedDoc?.decryptOnlyJSON).toEqual({ lat: 123, long: 456 })
     })
   })
 })

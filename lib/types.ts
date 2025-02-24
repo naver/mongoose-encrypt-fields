@@ -17,6 +17,9 @@ export interface MongooseFieldEncryptionOptions {
 
 export type MongooseFieldEncryption = (schema: Schema, options: MongooseFieldEncryptionOptions) => void
 
+/** Encryption mode. Defaults to `'both'`. */
+export type EncryptionMode = 'both' | 'encryptOnly' | 'decryptOnly'
+
 declare module 'mongoose' {
   namespace Schema {
     namespace Types {
@@ -26,8 +29,8 @@ declare module 'mongoose' {
 
         /** Set encryption functions for this SchemaType  */
         static setEncryptionFunctions(functions: MongooseFieldEncryptionOptions): void
-        /** Encrypt given value to string. Null and undefined are returned as is. */
 
+        /** Encrypt given value to string. Null and undefined are returned as is. */
         encrypt(value: any): string | null | undefined
 
         /** Decrypt given value. Unencrypted values are returned as is. */
