@@ -8,7 +8,7 @@ import { EJSON } from 'bson'
 import { randomUUID } from 'crypto'
 import mongoose, { Mongoose, SchemaOptions, SchemaType, model, Model, Document, Schema } from 'mongoose'
 import { Schema as NestJsSchema, Prop, SchemaFactory } from '@nestjs/mongoose'
-import { MongooseFieldEncryptionOptions } from './types'
+import { EncryptionMode, MongooseFieldEncryptionOptions } from './types'
 
 export class EncryptedString extends SchemaType {
   /** This schema type's name, to defend against minifiers that mangle function names. */
@@ -24,16 +24,20 @@ export class EncryptedString extends SchemaType {
 
   /** Default options for this SchemaType */
   defaultOptions: Record<string, any> = {}
+
   private $conditionalHandlers: Record<
     string,
     (value: any) => (string | null | undefined) | (string | null | undefined)[]
   >
+  private encryptionMode: EncryptionMode
   private originalType: any
   private originalModel: Model<any>
 
-  constructor(path: string, options?: SchemaOptions & { originalType: any }) {
+  constructor(path: string, options?: SchemaOptions & { originalType: any; encryptionMode?: EncryptionMode }) {
     super(path, { ...options, originalType: undefined }, 'EncryptedString')
 
+    this.validateEncryptionMode(options?.encryptionMode)
+    this.encryptionMode = options?.encryptionMode ?? 'both'
     this.originalType = options?.originalType ?? String
     this.originalModel = model(`${path}_${randomUUID()}`, this.createOriginalSchema())
 
@@ -70,6 +74,12 @@ export class EncryptedString extends SchemaType {
     }
   }
 
+  private validateEncryptionMode(encryptionMode?: EncryptionMode) {
+    if (encryptionMode && !['both', 'encryptOnly', 'decryptOnly'].includes(encryptionMode)) {
+      throw new Error(`Invalid encryptionMode: '${encryptionMode}'. Allowed: 'both', 'encryptOnly', 'decryptOnly'.`)
+    }
+  }
+
   /** Set encryption functions for this SchemaType  */
   static setEncryptionFunctions({ encrypt, decrypt, isEncrypted }: MongooseFieldEncryptionOptions) {
     if (
@@ -88,7 +98,7 @@ export class EncryptedString extends SchemaType {
     @NestJsSchema({ _id: false, autoCreate: false, autoIndex: false })
     class Model {
       @Prop({ type: this.originalType, default: this.options.default })
-      // @ts-ignore
+      // @ts-expect-error This is a dynamic property
       [this.path]: any
     }
     return SchemaFactory.createForClass(Model)
@@ -100,7 +110,7 @@ export class EncryptedString extends SchemaType {
 
   /** Encrypt given value. Null and undefined are returned as is. */
   encrypt(value: any): string | null | undefined {
-    if (value === null || value === undefined) {
+    if (this.encryptionMode === 'decryptOnly' || value === null || value === undefined) {
       return value
     }
 
@@ -122,7 +132,7 @@ export class EncryptedString extends SchemaType {
 
   /** Decrypt given value. Unencrypted values are returned as is. */
   decrypt(value: any, isLean: boolean): any {
-    if (!this.isEncrypted(value)) {
+    if (this.encryptionMode === 'encryptOnly' || !this.isEncrypted(value)) {
       return value
     }
 
