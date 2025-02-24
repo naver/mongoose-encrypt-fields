@@ -201,12 +201,12 @@ await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{ phoneNumb
 
 Each field can have a different encryption mode. The encryption mode can be set using the `encryptionMode` option. It supports the following modes: `encryptOnly`, `decryptOnly`, and `both`. The default is `both`.
 
-This option is especially useful when you need to remove encryption from an existing encrypted field. You can temporarily set the mode to `decryptOnly`, and once the update is complete, remove the encryption options entirely.
+This option is particularly useful if you need to remove encryption from an already encrypted field. By temporarily setting the mode to `decryptOnly`, you can read the encrypted data without encrypting new or updated documents. Once the field update is complete, simply remove the encryption settings entirely.
 
 ```typescript
 @Schema()
 export class User {
-  @Prop({ type: EncryptedString, encryptionMode: 'encryptOnly' })
+  @Prop({ type: EncryptedString, encryptionMode: 'decryptOnly' })
   uniqueId!: string
 }
 ```
