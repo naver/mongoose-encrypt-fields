@@ -681,6 +681,8 @@ describe('[plugin] encrypt/decrypt', () => {
 
       // Then
       expect(doc.encryptOnly).toEqual(encrypt('encryptOnly'))
+      expect(doc.both).toEqual('both')
+      expect(doc.default).toEqual('default')
       expect(foundDoc?.encryptOnly).toEqual(encrypt('encryptOnly'))
       expect(foundDoc?.both).toEqual('both')
       expect(foundDoc?.default).toEqual('default')
@@ -702,6 +704,7 @@ describe('[plugin] encrypt/decrypt', () => {
       // When
       const foundEncryptedDoc = await encryptionModeTestModel.findById(encryptedDoc._id)
       const foundNotEncryptedDoc = await encryptionModeTestModel.findById(notEncryptedDoc._id)
+      const rawEncryptedDoc = await encryptionModeTestModel.collection.findOne({ _id: encryptedDoc._id })
       const rawNotEncryptedDoc = await encryptionModeTestModel.collection.findOne({ _id: notEncryptedDoc._id })
 
       // Then
@@ -712,6 +715,7 @@ describe('[plugin] encrypt/decrypt', () => {
       expect(foundNotEncryptedDoc?.decryptOnly).toEqual('decryptOnly')
       expect(foundNotEncryptedDoc?.both).toEqual('both')
       expect(foundNotEncryptedDoc?.default).toEqual('default')
+      expect(rawEncryptedDoc?.decryptOnly).toEqual(encrypt('decryptOnly'))
       expect(rawNotEncryptedDoc?.decryptOnly).toEqual('decryptOnly')
     })
   })
