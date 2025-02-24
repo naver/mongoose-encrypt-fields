@@ -6,7 +6,7 @@
 
 import { EJSON } from 'bson'
 import { randomUUID } from 'crypto'
-import mongoose, { Mongoose, SchemaOptions, SchemaType, model, Model, Document, Schema } from 'mongoose'
+import mongoose, { Mongoose, SchemaType, model, Model, Document, Schema, SchemaTypeOptions } from 'mongoose'
 import { Schema as NestJsSchema, Prop, SchemaFactory } from '@nestjs/mongoose'
 import { EncryptionMode, MongooseFieldEncryptionOptions } from './types'
 
@@ -33,7 +33,10 @@ export class EncryptedString extends SchemaType {
   private originalType: any
   private originalModel: Model<any>
 
-  constructor(path: string, options?: SchemaOptions & { originalType: any; encryptionMode?: EncryptionMode }) {
+  constructor(
+    path: string,
+    options?: SchemaTypeOptions<string> & { originalType?: any; encryptionMode?: EncryptionMode },
+  ) {
     super(path, { ...options, originalType: undefined }, 'EncryptedString')
 
     this.validateEncryptionMode(options?.encryptionMode)
