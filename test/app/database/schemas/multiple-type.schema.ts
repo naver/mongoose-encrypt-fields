@@ -10,6 +10,7 @@ import { EncryptedString } from '@lib'
 
 export type MultipleTypeDocument = HydratedDocument<MultipleType>
 
+@Schema({ _id: false })
 class GPS {
   @Prop()
   lat!: number

@@ -672,33 +672,33 @@ describe('[plugin] encrypt/decrypt', () => {
       // Given
       const doc = await encryptionModeTestModel.create({
         encryptOnly: 'encryptOnly',
-        both: 'both',
-        default: 'default',
+        encryptOnlyJSON: { lat: 123, long: 456 },
       })
 
       // When
       const foundDoc = await encryptionModeTestModel.findById(doc._id)
+      const rawDoc = await encryptionModeTestModel.collection.findOne({ _id: doc._id })
 
       // Then
       expect(doc.encryptOnly).toEqual(encrypt('encryptOnly'))
-      expect(doc.both).toEqual('both')
-      expect(doc.default).toEqual('default')
+      expect(doc.encryptOnlyJSON).toEqual(encrypt(JSON.stringify({ lat: 123, long: 456 })))
+
       expect(foundDoc?.encryptOnly).toEqual(encrypt('encryptOnly'))
-      expect(foundDoc?.both).toEqual('both')
-      expect(foundDoc?.default).toEqual('default')
+      expect(foundDoc?.encryptOnlyJSON).toEqual(encrypt(JSON.stringify({ lat: 123, long: 456 })))
+
+      expect(rawDoc?.encryptOnly).toEqual(encrypt('encryptOnly'))
+      expect(rawDoc?.encryptOnlyJSON).toEqual(encrypt(JSON.stringify({ lat: 123, long: 456 })))
     })
 
     it('should work with decryptOnly', async () => {
       // Given
       const encryptedDoc = await encryptionModeTestModel.create({
         decryptOnly: encrypt('decryptOnly'),
-        both: 'both',
-        default: 'default',
+        decryptOnlyJSON: encrypt(JSON.stringify({ lat: 123, long: 456 })),
       })
       const notEncryptedDoc = await encryptionModeTestModel.create({
         decryptOnly: 'decryptOnly',
-        both: 'both',
-        default: 'default',
+        decryptOnlyJSON: { lat: 123, long: 456 },
       })
 
       // When
@@ -709,14 +709,19 @@ describe('[plugin] encrypt/decrypt', () => {
 
       // Then
       expect(encryptedDoc.decryptOnly).toEqual('decryptOnly')
+      expect(encryptedDoc.decryptOnlyJSON).toEqual({ lat: 123, long: 456 })
+      expect(notEncryptedDoc.decryptOnly).toEqual('decryptOnly')
+      expect(notEncryptedDoc.decryptOnlyJSON).toEqual({ lat: 123, long: 456 })
+
       expect(foundEncryptedDoc?.decryptOnly).toEqual('decryptOnly')
-      expect(foundEncryptedDoc?.both).toEqual('both')
-      expect(foundEncryptedDoc?.default).toEqual('default')
+      expect(foundEncryptedDoc?.decryptOnlyJSON).toEqual({ lat: 123, long: 456 })
       expect(foundNotEncryptedDoc?.decryptOnly).toEqual('decryptOnly')
-      expect(foundNotEncryptedDoc?.both).toEqual('both')
-      expect(foundNotEncryptedDoc?.default).toEqual('default')
+      expect(foundNotEncryptedDoc?.decryptOnlyJSON).toEqual({ lat: 123, long: 456 })
+
       expect(rawEncryptedDoc?.decryptOnly).toEqual(encrypt('decryptOnly'))
+      expect(rawEncryptedDoc?.decryptOnlyJSON).toEqual(encrypt(JSON.stringify({ lat: 123, long: 456 })))
       expect(rawNotEncryptedDoc?.decryptOnly).toEqual('decryptOnly')
+      expect(rawNotEncryptedDoc?.decryptOnlyJSON).toEqual({ lat: 123, long: 456 })
     })
   })
 })
