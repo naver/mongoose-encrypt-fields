@@ -20,6 +20,16 @@ export type MongooseFieldEncryption = (schema: Schema, options: MongooseFieldEnc
 /** Encryption mode. Defaults to `'both'`. */
 export type EncryptionMode = 'both' | 'encryptOnly' | 'decryptOnly'
 
+/** Per-field encryption functions. All three must be provided together or omitted entirely. */
+export interface PerFieldEncryptionOptions {
+  /** Per-field string encryption function. Overrides the global encrypt for this field only. */
+  encrypt?: (value: string) => string
+  /** Per-field string decryption function. Overrides the global decrypt for this field only. */
+  decrypt?: (value: string) => string
+  /** Per-field check if string is encrypted. Overrides the global isEncrypted for this field only. */
+  isEncrypted?: (value: string) => boolean
+}
+
 declare module 'mongoose' {
   namespace Schema {
     namespace Types {
