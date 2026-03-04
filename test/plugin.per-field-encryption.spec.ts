@@ -122,6 +122,19 @@ describe('[plugin] per-field encryption', () => {
       expect(doc.subDocs?.[1].customField).toEqual('subCustom2')
     })
 
+    it('should encrypt per-field subdocument field when used as a query filter', async () => {
+      // Given
+      const doc = await model.create({
+        subDoc: { globalField: 'subQueryGlobal', customField: 'subQueryCustom' },
+      })
+
+      // When — querying subDoc.customField with plaintext should find the document
+      const foundDoc = await model.findOne({ 'subDoc.customField': 'subQueryCustom' })
+
+      // Then
+      expect(foundDoc?._id.toString()).toEqual(doc._id.toString())
+    })
+
     it('should decrypt per-field encrypted subdocument fields on lean queries', async () => {
       // Given
       await model.create({
