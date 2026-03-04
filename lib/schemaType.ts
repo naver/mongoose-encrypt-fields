@@ -32,16 +32,35 @@ export class EncryptedString extends SchemaType {
   private encryptionMode: EncryptionMode
   private originalType: any
   private originalModel: Model<any>
+  private encryptFn?: (value: string) => string
+  private decryptFn?: (value: string) => string
+  private isEncryptedFn?: (value: string) => boolean
 
   constructor(
     path: string,
-    options?: SchemaTypeOptions<string> & { originalType?: any; encryptionMode?: EncryptionMode },
+    options?: SchemaTypeOptions<string> & {
+      originalType?: any
+      encryptionMode?: EncryptionMode
+      encrypt?: (value: string) => string
+      decrypt?: (value: string) => string
+      isEncrypted?: (value: string) => boolean
+    },
   ) {
-    super(path, { ...options, originalType: undefined }, 'EncryptedString')
+    // Strip per-field functions before passing to Mongoose super — Mongoose calls any option key
+    // that matches an instance method name, which would trigger this.encrypt() before originalModel is set
+    super(
+      path,
+      { ...options, originalType: undefined, encrypt: undefined, decrypt: undefined, isEncrypted: undefined },
+      'EncryptedString',
+    )
 
     this.validateEncryptionMode(options?.encryptionMode)
+    this.validatePerFieldEncryption(options)
     this.encryptionMode = options?.encryptionMode ?? 'both'
     this.originalType = options?.originalType ?? String
+    this.encryptFn = options?.encrypt
+    this.decryptFn = options?.decrypt
+    this.isEncryptedFn = options?.isEncrypted
     this.originalModel = model(`${path}_${randomUUID()}`, this.createOriginalSchema())
 
     this.$conditionalHandlers = {
@@ -80,6 +99,21 @@ export class EncryptedString extends SchemaType {
   private validateEncryptionMode(encryptionMode?: EncryptionMode) {
     if (encryptionMode && !['both', 'encryptOnly', 'decryptOnly'].includes(encryptionMode)) {
       throw new Error(`Invalid encryptionMode: '${encryptionMode}'. Allowed: 'both', 'encryptOnly', 'decryptOnly'.`)
+    }
+  }
+
+  private validatePerFieldEncryption(options?: {
+    encrypt?: (value: string) => string
+    decrypt?: (value: string) => string
+    isEncrypted?: (value: string) => boolean
+  }) {
+    const provided = [options?.encrypt, options?.decrypt, options?.isEncrypted].filter(
+      (fn) => typeof fn === 'function',
+    ).length
+    if (provided > 0 && provided < 3) {
+      throw new Error(
+        'Per-field encryption requires all three functions: encrypt, decrypt, isEncrypted. Provide all or none.',
+      )
     }
   }
 
@@ -127,10 +161,11 @@ export class EncryptedString extends SchemaType {
       throw validationError
     }
 
+    const encryptFn = this.encryptFn ?? EncryptedString.encrypt
     const castedValue = tempDoc.toObject()[this.path]
     return this.originalType === String
-      ? EncryptedString.encrypt(castedValue)
-      : EncryptedString.encrypt(EJSON.stringify(castedValue, { relaxed: true }))
+      ? encryptFn(castedValue)
+      : encryptFn(EJSON.stringify(castedValue, { relaxed: true }))
   }
 
   /** Decrypt given value. Unencrypted values are returned as is. */
@@ -139,7 +174,7 @@ export class EncryptedString extends SchemaType {
       return value
     }
 
-    const decryptedValue = EncryptedString.decrypt(value)
+    const decryptedValue = (this.decryptFn ?? EncryptedString.decrypt)(value)
     const decryptedObj = this.originalType === String ? decryptedValue : EJSON.parse(decryptedValue, { relaxed: true })
 
     if (isLean) {
@@ -156,7 +191,7 @@ export class EncryptedString extends SchemaType {
       return false
     }
 
-    return EncryptedString.isEncrypted(value)
+    return (this.isEncryptedFn ?? EncryptedString.isEncrypted)(value)
   }
 
   // ref: https://github.com/mongoosejs/mongoose-long/blob/662a6081dd60a6966529d47b48f93b5137ba0bc8/lib/index.js#L107
