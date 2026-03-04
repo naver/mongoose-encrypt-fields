@@ -5,17 +5,26 @@
 Designed for use with Mongoose in NestJS.
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph app [Application]
-    nestjs(Nest.js)
-    mongoose([Mongoose])
-    nestjs --> mongoose
-    mongoose ---|encrypt/decrypt using plugin and custom SchemaType| mongoose
+    service(NestJS Service)
   end
-  mongodb[(MongoDB)]
 
-  mongoose --> mongodb
-  mongodb --> mongoose
+  subgraph mongoose [Mongoose ODM]
+    schemaType("EncryptedString SchemaType<br/>─────────────────────<br/>set hook → encrypt on write<br/>get/transform hook → decrypt on read")
+    plugin("mongooseFieldEncryption Plugin<br/>─────────────────────<br/>post-find hook → decrypt lean results")
+  end
+
+  mongodb[(MongoDB<br/>stores encrypted values)]
+
+  service -->|"save / update (plaintext)"| schemaType
+  schemaType -->|encrypted value| mongodb
+
+  mongodb -->|encrypted value| schemaType
+  schemaType -->|"hydrated doc (plaintext)"| service
+
+  mongodb -->|encrypted value| plugin
+  plugin -->|"lean result (plaintext)"| service
 ```
 
 ## Installation
