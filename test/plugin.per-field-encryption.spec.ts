@@ -82,6 +82,61 @@ describe('[plugin] per-field encryption', () => {
     expect(foundDoc?._id.toString()).toEqual(doc._id.toString())
   })
 
+  describe('non-string originalType', () => {
+    it('should encrypt Number with per-field functions and decrypt correctly', async () => {
+      // Given
+      const doc = await model.create({ customNumber: 12345 })
+      const rawDoc = await model.collection.findOne({ _id: doc._id })
+
+      // Then — stored as encrypt2(JSON.stringify(12345)), not global encrypt
+      expect(rawDoc?.customNumber).toEqual(encrypt2(JSON.stringify(12345)))
+      expect(rawDoc?.customNumber).not.toEqual(encrypt(JSON.stringify(12345)))
+      expect(doc.customNumber).toEqual(12345)
+
+      // And — find and lean both decrypt correctly
+      const foundDoc = await model.findById(doc._id)
+      const leanDoc = await model.findById(doc._id).lean()
+      expect(foundDoc?.customNumber).toEqual(12345)
+      expect(leanDoc?.customNumber).toEqual(12345)
+    })
+
+    it('should encrypt Object with per-field functions and decrypt correctly', async () => {
+      // Given
+      const gps = { lat: 37.5, long: 127.0 }
+      const doc = await model.create({ customObject: gps })
+      const rawDoc = await model.collection.findOne({ _id: doc._id })
+
+      // Then — stored as encrypt2(JSON.stringify(gps)), not global encrypt
+      expect(rawDoc?.customObject).toEqual(encrypt2(JSON.stringify(gps)))
+      expect(rawDoc?.customObject).not.toEqual(encrypt(JSON.stringify(gps)))
+      expect(doc.customObject).toMatchObject(gps)
+
+      // And — find and lean both decrypt correctly
+      const foundDoc = await model.findById(doc._id)
+      const leanDoc = await model.findById(doc._id).lean()
+      expect(foundDoc?.customObject).toMatchObject(gps)
+      expect(leanDoc?.customObject).toMatchObject(gps)
+    })
+
+    it('should encrypt Array with per-field functions and decrypt correctly', async () => {
+      // Given
+      const arr = [1, 2, 3]
+      const doc = await model.create({ customArray: arr })
+      const rawDoc = await model.collection.findOne({ _id: doc._id })
+
+      // Then — stored as encrypt2(JSON.stringify(arr)), not global encrypt
+      expect(rawDoc?.customArray).toEqual(encrypt2(JSON.stringify(arr)))
+      expect(rawDoc?.customArray).not.toEqual(encrypt(JSON.stringify(arr)))
+      expect(doc.customArray).toEqual(arr)
+
+      // And — find and lean both decrypt correctly
+      const foundDoc = await model.findById(doc._id)
+      const leanDoc = await model.findById(doc._id).lean()
+      expect(foundDoc?.customArray).toEqual(arr)
+      expect(leanDoc?.customArray).toEqual(arr)
+    })
+  })
+
   describe('subdocument', () => {
     it('should apply per-field encryption inside a subdocument', async () => {
       // Given

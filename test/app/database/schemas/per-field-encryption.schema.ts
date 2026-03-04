@@ -9,6 +9,15 @@ import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { encrypt2, decrypt2, isEncrypted2 } from '../../crypto2'
 
 @Schema({ _id: false })
+export class GPS {
+  @Prop()
+  lat!: number
+
+  @Prop()
+  long!: number
+}
+
+@Schema({ _id: false })
 export class PerFieldEncryptionSubDoc {
   /** Uses global encryption (default) */
   @Prop({ type: EncryptedString })
@@ -42,6 +51,18 @@ export class PerFieldEncryption {
     isEncrypted: isEncrypted2,
   })
   customField?: string
+
+  /** Per-field encrypted Number */
+  @Prop({ type: EncryptedString, originalType: Number, encrypt: encrypt2, decrypt: decrypt2, isEncrypted: isEncrypted2 })
+  customNumber?: number
+
+  /** Per-field encrypted Object */
+  @Prop({ type: EncryptedString, originalType: GPS, encrypt: encrypt2, decrypt: decrypt2, isEncrypted: isEncrypted2 })
+  customObject?: GPS
+
+  /** Per-field encrypted Array */
+  @Prop({ type: EncryptedString, originalType: [Number], encrypt: encrypt2, decrypt: decrypt2, isEncrypted: isEncrypted2 })
+  customArray?: number[]
 
   /** Subdocument containing per-field encrypted fields */
   @Prop(PerFieldEncryptionSubDoc)
