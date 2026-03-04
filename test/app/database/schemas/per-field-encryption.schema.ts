@@ -8,6 +8,22 @@ import { EncryptedString } from '@lib'
 import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { encrypt2, decrypt2, isEncrypted2 } from '../../crypto2'
 
+@Schema({ _id: false })
+export class PerFieldEncryptionSubDoc {
+  /** Uses global encryption (default) */
+  @Prop({ type: EncryptedString })
+  globalField?: string
+
+  /** Uses per-field encryption functions */
+  @Prop({
+    type: EncryptedString,
+    encrypt: encrypt2,
+    decrypt: decrypt2,
+    isEncrypted: isEncrypted2,
+  })
+  customField?: string
+}
+
 @Schema()
 export class PerFieldEncryption {
   constructor(obj: Partial<PerFieldEncryption>) {
@@ -26,6 +42,14 @@ export class PerFieldEncryption {
     isEncrypted: isEncrypted2,
   })
   customField?: string
+
+  /** Subdocument containing per-field encrypted fields */
+  @Prop(PerFieldEncryptionSubDoc)
+  subDoc?: PerFieldEncryptionSubDoc
+
+  /** Array of subdocuments containing per-field encrypted fields */
+  @Prop([PerFieldEncryptionSubDoc])
+  subDocs?: PerFieldEncryptionSubDoc[]
 }
 export const PerFieldEncryptionSchema = SchemaFactory.createForClass(PerFieldEncryption)
 
