@@ -1,10 +1,8 @@
 # mongoose-encrypt-fields
 
-`mongoose-encrypt-fields` provides a Mongoose [plugin](https://mongoosejs.com/docs/plugins.html) and a [custom SchemaType](https://mongoosejs.com/docs/customschematypes.html) that encrypt and decrypt individual fields.
+`mongoose-encrypt-fields` is a Mongoose [plugin](https://mongoosejs.com/docs/plugins.html) and [custom SchemaType](https://mongoosejs.com/docs/customschematypes.html) that handles field-level encryption and decryption at the ODM layer. Applications can encrypt sensitive fields transparently — no extra logic needed at the service or repository level.
 
-The goal of this plugin is to perform field-level encryption and decryption at the ODM layer, allowing applications to use it without worrying about the logic.
-
-This plugin is for use cases where Mongoose is used in Nest.js.
+Designed for use with Mongoose in NestJS.
 
 ```mermaid
 flowchart LR
@@ -33,21 +31,16 @@ yarn add mongoose-encrypt-fields
 
 ## Usage
 
-### Basic usage
+### Basic Usage
 
-The plugin provides the `EncryptedString` [SchemaType](https://mongoosejs.com/docs/schematypes.html). To encrypt and decrypt, import and use this SchemaType.
+The plugin provides `EncryptedString`, a custom [SchemaType](https://mongoosejs.com/docs/schematypes.html). Use it as the `type` for any field you want to encrypt.
 
 ```typescript
-import { Schema as MongooseSchema } from 'mongoose'
 import { EncryptedString } from 'mongoose-encrypt-fields'
 import { Schema } from 'mongoose' // Also accessible as Schema.Types.EncryptedString
 ```
 
-Specify the field's `type` as `EncryptedString`. If the original type is not String, specify the original type in the `originalType` field.
-
-Non-string fields are encrypted and decrypted using `EJSON.stringify()` and `EJSON.parse()` with `{ relaxed: true }`. For more information, check the [MongoDB Extended JSON format](https://www.mongodb.com/docs/manual/reference/mongodb-extended-json/).
-
-This behavior is the same as the PyMongo's [json_util](https://pymongo.readthedocs.io/en/stable/api/bson/json_util.html).
+Set a field's `type` to `EncryptedString`. If the underlying value isn't a string, specify the original type with `originalType` — non-string values are serialized with `EJSON.stringify()` / `EJSON.parse()` (`{ relaxed: true }`) before encryption, which is compatible with PyMongo's [json_util](https://pymongo.readthedocs.io/en/stable/api/bson/json_util.html).
 
 ```typescript
 @Schema()
@@ -60,7 +53,7 @@ export class User {
 }
 ```
 
-You can also use it without any restrictions in SubDocuments.
+`EncryptedString` also works inside subdocuments without any extra configuration.
 
 ```typescript
 @Schema()
@@ -71,54 +64,39 @@ export class UserSubDocument {
 
 @Schema()
 export class Review {
-  @Prop(UserSubDocument) // subDocument
+  @Prop(UserSubDocument) // subdocument
   subUser!: UserSubDocument
 
-  @Prop([UserSubDocument]) // subDocument array
+  @Prop([UserSubDocument]) // subdocument array
   subUsers!: UserSubDocument[]
 }
 ```
 
-You also need to inject the encryption functions into the SchemaType using `EncryptedString.setEncryptionFunctions()`. (This only needs to be called once in the code.)
+You also need to register your encryption functions once via `EncryptedString.setEncryptionFunctions()`. (This can be skipped if you're using the plugin, described below.)
 
-However, if you apply the plugin described later, this part can be omitted.
-
-- `decrypt`: Function to decrypt an encrypted string to plain text
-- `encrypt`: Function to encrypt plain text to an encrypted string
-- `isEncrypted`: Function to determine if a string is encrypted
+- `encrypt` — encrypts a plaintext string
+- `decrypt` — decrypts an encrypted string back to plaintext
+- `isEncrypted` — returns `true` if the string is already encrypted
 
 ```typescript
-const myEncrypt = (value: string): string => {
-  // logic
-}
-const myDecrypt = (value: string): string => {
-  // logic
-}
-const myIsEncrypted = (value: string): boolean => {
-  // logic
-}
+const myEncrypt = (value: string): string => { /* ... */ }
+const myDecrypt = (value: string): string => { /* ... */ }
+const myIsEncrypted = (value: string): boolean => { /* ... */ }
 
-// Call can be omitted when using the plugin
+// Not needed when using the plugin
 EncryptedString.setEncryptionFunctions({ encrypt: myEncrypt, decrypt: myDecrypt, isEncrypted: myIsEncrypted })
 ```
 
-Most of the features will work even if you only use the SchemaType. However, decryption will not work if you use `lean`.
+> Most features work with the SchemaType alone. However, decryption won't work with `.lean()` queries unless the plugin is also registered.
 
-### Applying the Plugin (for lean)
+### Plugin (Required for lean)
 
-To decrypt properly in lean, you need to register the `mongooseFieldEncryption` plugin to the schema.
+To decrypt fields in `.lean()` results, register the `mongooseFieldEncryption` plugin. The plugin hooks into Mongoose's post-query middleware to decrypt lean documents.
 
-To apply the plugin to a schema, call the `.plugin()` method on the desired schema and add the encryption functions to the options.
+To apply the plugin per schema:
 
 ```typescript
-import { Prop, Schema, SchemaFactory, MongooseModule } from '@nestjs/mongoose'
-import { mongooseFieldEncryption } from '@pup/mongoose-encrypt-fields'
-
-@Schema()
-export class User {
-  @Prop(EncryptedString)
-  uniqueId!: string
-}
+import { mongooseFieldEncryption } from 'mongoose-encrypt-fields'
 
 export const UserSchema = SchemaFactory.createForClass(User)
 
@@ -137,27 +115,51 @@ export const UserModelModule = MongooseModule.forFeatureAsync([
 ])
 ```
 
-Encrypted documents can be stored anywhere, so you can use the global plugin feature to register the plugin to all schemas at once.
+Since encrypted documents can live in any collection, it's usually easier to register the plugin globally once:
 
 ```typescript
 MongooseModule.forRootAsync({
   useFactory: async () => {
-    // Apply globally to support lean decryption in all schemas.
-    // Prevent duplicate plugin registration with deduplicate option
     mongoose.plugin(mongooseFieldEncryption, {
       encrypt: myEncrypt,
       decrypt: myDecrypt,
       isEncrypted: myIsEncrypted,
-      deduplicate: true,
+      deduplicate: true, // prevents double-registration if called multiple times
     })
-    ...
+    // ...
   },
 })
 ```
 
+### Per-Field Encryption Functions
+
+By default, all `EncryptedString` fields share the global encryption functions registered via `setEncryptionFunctions()` or the plugin. If you need different encryption logic per field — for example, using different KMS keys or different algorithms — you can pass `encrypt`, `decrypt`, and `isEncrypted` directly to the field's schema options.
+
+All three functions must be provided together. Providing only some of them will throw an error.
+
+```typescript
+@Schema()
+export class User {
+  // Uses global encryption
+  @Prop({ type: EncryptedString })
+  name!: string
+
+  // Uses a different KMS key for this field
+  @Prop({
+    type: EncryptedString,
+    encrypt: kmsB.encrypt,
+    decrypt: kmsB.decrypt,
+    isEncrypted: kmsB.isEncrypted,
+  })
+  ssn!: string
+}
+```
+
+Per-field functions work transparently across all query types, including `.lean()` and query operators like `$eq`, `$in`, and `$ne`.
+
 ### Validation & Casting
 
-The plugin also supports Validation and Casting for the `OriginalType`.
+When using `originalType`, validation and casting apply before encryption — the same rules as the underlying type.
 
 ```typescript
 @Schema({ _id: false })
@@ -174,34 +176,33 @@ export class Place {
   phone!: Phone[]
 }
 
-// 1. Validation error occurs since phoneNumber is a required field.
+// throws ValidationError — phoneNumber is required
 await placeModel.create({ placeId: 'placeId', phone: [{}] })
 
-// 2. Document saved
+// succeeds
 await placeModel.create({ placeId: 'placeId', phone: [{ phoneNumber: 1234 }] })
 ```
 
-Validation and Casting are also supported in Filter and Update queries.
+Validation and casting also apply to filter and update queries:
 
 ```typescript
-// 1. Validation error occurs
-await placeModel.findOne({ phone: [{}] })
-
-// 2. No error
-await placeModel.findOne({ phone: [{ phoneNumber: 1234 }] })
-
-// 3. Validation error occurs
-await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{}] } })
-
-// 4. No error
-await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{ phoneNumber: 1234 }] } })
+await placeModel.findOne({ phone: [{}] })                                          // ValidationError
+await placeModel.findOne({ phone: [{ phoneNumber: 1234 }] })                       // OK
+await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{}] } })     // ValidationError
+await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{ phoneNumber: 1234 }] } }) // OK
 ```
 
 ### Encryption Mode
 
-Each field can have a different encryption mode. The encryption mode can be set using the `encryptionMode` option. It supports the following modes: `encryptOnly`, `decryptOnly`, and `both`. The default is `both`.
+Each field can operate in one of three encryption modes, configured with the `encryptionMode` option. The default is `'both'`.
 
-This option is particularly useful if you need to remove encryption from an already encrypted field. By temporarily setting the mode to `decryptOnly`, you can read the encrypted data without encrypting new or updated documents. Once the field update is complete, simply remove the encryption settings entirely.
+| Mode | Behavior |
+|------|----------|
+| `'both'` | Encrypts on write, decrypts on read (default) |
+| `'encryptOnly'` | Encrypts on write, returns raw encrypted value on read |
+| `'decryptOnly'` | Skips encryption on write, decrypts on read |
+
+`'decryptOnly'` is useful for gradual encryption removal: temporarily set the mode to `'decryptOnly'` so reads still decrypt existing data, but new writes are stored as plaintext. Once migration is complete, remove the encryption settings entirely.
 
 ```typescript
 @Schema()
@@ -211,9 +212,9 @@ export class User {
 }
 ```
 
-### Discriminator
+### Discriminators
 
-Mongoose's discriminator feature is also supported. The usage is the same as the basic usage.
+Mongoose discriminators are supported. Usage is the same as the basic setup.
 
 ```typescript
 @Schema({ _id: false })
@@ -257,9 +258,7 @@ export const CheckInSchema = SchemaFactory.createForClass(CheckIn)
 export const CheckInModelModule = MongooseModule.forFeatureAsync([
   {
     name: CheckIn.name,
-    useFactory: async () => {
-      return CheckInSchema
-    },
+    useFactory: async () => CheckInSchema,
     discriminators: [
       { value: CheckInType.GPS, name: GPSCheckIn.name, schema: GPSCheckInSchema },
       { value: CheckInType.PLACE, name: PlaceCheckIn.name, schema: PlaceCheckInSchema },
@@ -268,27 +267,24 @@ export const CheckInModelModule = MongooseModule.forFeatureAsync([
 ])
 ```
 
-However, if you want to use the discriminator schema in a subDocument, you must specify the type of the corresponding field as a schema type.
-
-This is because Mongoose requires a schema to know the discriminator information.
+When using a discriminator schema inside a subdocument, the `type` must be set to the schema object (not the class). Mongoose needs the schema reference to resolve discriminator information.
 
 ```typescript
 export class Review {
-  // To use discriminator in subDocument, type must be specified as schema
-  @Prop({ type: CheckInSchema })
+  @Prop({ type: CheckInSchema }) // schema object, not class
   checkIn?: CheckIn
 }
 ```
 
-### Aggregate Not Supported
+### Aggregate
 
-Encryption for Aggregate is not supported.
+Aggregate queries are not supported — encrypted fields will not be automatically decrypted in aggregation pipelines.
 
 ## License
 
-mongoose-encrypt-fields in released under the [MIT license](https://github.com/naver/mongoose-encrypt-fields/blob/main/LICENSE).
+mongoose-encrypt-fields is released under the [MIT license](https://github.com/naver/mongoose-encrypt-fields/blob/main/LICENSE).
 
-```license
+```
 mongoose-encrypt-fields
 Copyright 2024-present NAVER Corp.
 
@@ -304,7 +300,7 @@ all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
