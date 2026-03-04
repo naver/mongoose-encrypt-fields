@@ -18,6 +18,7 @@ import { UserJobModelModule } from './user-job.schema'
 import { PlaceModelModule } from './place.schema'
 import { NonJsonTypeModelModule } from './non-json-type.schema'
 import { EncryptionModeTestModelModule } from './encryption-mode.schema'
+import { PerFieldEncryptionModelModule } from './per-field-encryption.schema'
 
 export const createSchemaModules: () => DynamicModule[] = () => [
   UserModelModule,
@@ -32,6 +33,7 @@ export const createSchemaModules: () => DynamicModule[] = () => [
   PlaceModelModule,
   NonJsonTypeModelModule,
   EncryptionModeTestModelModule,
+  PerFieldEncryptionModelModule,
 ]
 
 export function getPUPDBModelToken(model: string) {
