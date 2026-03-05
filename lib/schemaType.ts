@@ -41,16 +41,17 @@ export class EncryptedString extends SchemaType {
     options?: SchemaTypeOptions<string> & {
       originalType?: any
       encryptionMode?: EncryptionMode
-      encrypt?: (value: string) => string
-      decrypt?: (value: string) => string
-      isEncrypted?: (value: string) => boolean
+      /** Per-field encrypt function. Suffixed with `Fn` to avoid conflict with Mongoose v8.15+ CSFLE `encrypt`. */
+      encryptFn?: (value: string) => string
+      decryptFn?: (value: string) => string
+      isEncryptedFn?: (value: string) => boolean
     },
   ) {
     // Strip per-field functions before passing to Mongoose super — Mongoose calls any option key
     // that matches an instance method name, which would trigger this.encrypt() before originalModel is set
     super(
       path,
-      { ...options, originalType: undefined, encrypt: undefined, decrypt: undefined, isEncrypted: undefined },
+      { ...options, originalType: undefined, encryptFn: undefined, decryptFn: undefined, isEncryptedFn: undefined },
       'EncryptedString',
     )
 
@@ -58,9 +59,9 @@ export class EncryptedString extends SchemaType {
     this.validatePerFieldEncryption(options)
     this.encryptionMode = options?.encryptionMode ?? 'both'
     this.originalType = options?.originalType ?? String
-    this.encryptFn = options?.encrypt
-    this.decryptFn = options?.decrypt
-    this.isEncryptedFn = options?.isEncrypted
+    this.encryptFn = options?.encryptFn
+    this.decryptFn = options?.decryptFn
+    this.isEncryptedFn = options?.isEncryptedFn
     this.originalModel = model(`${path}_${randomUUID()}`, this.createOriginalSchema())
 
     this.$conditionalHandlers = {
@@ -103,16 +104,16 @@ export class EncryptedString extends SchemaType {
   }
 
   private validatePerFieldEncryption(options?: {
-    encrypt?: (value: string) => string
-    decrypt?: (value: string) => string
-    isEncrypted?: (value: string) => boolean
+    encryptFn?: (value: string) => string
+    decryptFn?: (value: string) => string
+    isEncryptedFn?: (value: string) => boolean
   }) {
-    const provided = [options?.encrypt, options?.decrypt, options?.isEncrypted].filter(
+    const provided = [options?.encryptFn, options?.decryptFn, options?.isEncryptedFn].filter(
       (fn) => typeof fn === 'function',
     ).length
     if (provided > 0 && provided < 3) {
       throw new Error(
-        'Per-field encryption requires all three functions: encrypt, decrypt, isEncrypted. Provide all or none.',
+        'Per-field encryption requires all three functions: encryptFn, decryptFn, isEncryptedFn. Provide all or none.',
       )
     }
   }

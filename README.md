@@ -88,9 +88,15 @@ You also need to register your encryption functions once via `EncryptedString.se
 - `isEncrypted` — returns `true` if the string is already encrypted
 
 ```typescript
-const myEncrypt = (value: string): string => { /* ... */ }
-const myDecrypt = (value: string): string => { /* ... */ }
-const myIsEncrypted = (value: string): boolean => { /* ... */ }
+const myEncrypt = (value: string): string => {
+  /* ... */
+}
+const myDecrypt = (value: string): string => {
+  /* ... */
+}
+const myIsEncrypted = (value: string): boolean => {
+  /* ... */
+}
 
 // Not needed when using the plugin
 EncryptedString.setEncryptionFunctions({ encrypt: myEncrypt, decrypt: myDecrypt, isEncrypted: myIsEncrypted })
@@ -142,9 +148,11 @@ MongooseModule.forRootAsync({
 
 ### Per-Field Encryption Functions
 
-By default, all `EncryptedString` fields share the global encryption functions registered via `setEncryptionFunctions()` or the plugin. If you need different encryption logic per field — for example, using different KMS keys or different algorithms — you can pass `encrypt`, `decrypt`, and `isEncrypted` directly to the field's schema options.
+By default, all `EncryptedString` fields share the global encryption functions registered via `setEncryptionFunctions()` or the plugin. If you need different encryption logic per field — for example, using different KMS keys or different algorithms — you can pass `encryptFn`, `decryptFn`, and `isEncryptedFn` directly to the field's schema options.
 
 All three functions must be provided together. Providing only some of them will throw an error.
+
+> The option keys are suffixed with `Fn` to avoid conflict with Mongoose v8.15+'s built-in CSFLE [`encrypt`](https://mongoosejs.com/docs/encryption.html) property on `SchemaTypeOptions`.
 
 ```typescript
 @Schema()
@@ -156,9 +164,9 @@ export class User {
   // Uses a different KMS key for this field
   @Prop({
     type: EncryptedString,
-    encrypt: kmsB.encrypt,
-    decrypt: kmsB.decrypt,
-    isEncrypted: kmsB.isEncrypted,
+    encryptFn: kmsB.encrypt,
+    decryptFn: kmsB.decrypt,
+    isEncryptedFn: kmsB.isEncrypted,
   })
   ssn!: string
 }
@@ -195,9 +203,9 @@ await placeModel.create({ placeId: 'placeId', phone: [{ phoneNumber: 1234 }] })
 Validation and casting also apply to filter and update queries:
 
 ```typescript
-await placeModel.findOne({ phone: [{}] })                                          // ValidationError
-await placeModel.findOne({ phone: [{ phoneNumber: 1234 }] })                       // OK
-await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{}] } })     // ValidationError
+await placeModel.findOne({ phone: [{}] }) // ValidationError
+await placeModel.findOne({ phone: [{ phoneNumber: 1234 }] }) // OK
+await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{}] } }) // ValidationError
 await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{ phoneNumber: 1234 }] } }) // OK
 ```
 
@@ -205,11 +213,11 @@ await placeModel.updateOne({ placeId: 'placeId' }, { $set: { phone: [{ phoneNumb
 
 Each field can operate in one of three encryption modes, configured with the `encryptionMode` option. The default is `'both'`.
 
-| Mode | Behavior |
-|------|----------|
-| `'both'` | Encrypts on write, decrypts on read (default) |
+| Mode            | Behavior                                               |
+| --------------- | ------------------------------------------------------ |
+| `'both'`        | Encrypts on write, decrypts on read (default)          |
 | `'encryptOnly'` | Encrypts on write, returns raw encrypted value on read |
-| `'decryptOnly'` | Skips encryption on write, decrypts on read |
+| `'decryptOnly'` | Skips encryption on write, decrypts on read            |
 
 `'decryptOnly'` is useful for gradual encryption removal: temporarily set the mode to `'decryptOnly'` so reads still decrypt existing data, but new writes are stored as plaintext. Once migration is complete, remove the encryption settings entirely.
 

@@ -26,9 +26,9 @@ export class PerFieldEncryptionSubDoc {
   /** Uses per-field encryption functions */
   @Prop({
     type: EncryptedString,
-    encrypt: encrypt2,
-    decrypt: decrypt2,
-    isEncrypted: isEncrypted2,
+    encryptFn: encrypt2,
+    decryptFn: decrypt2,
+    isEncryptedFn: isEncrypted2,
   })
   customField?: string
 }
@@ -46,22 +46,40 @@ export class PerFieldEncryption {
   /** Uses per-field encryption functions */
   @Prop({
     type: EncryptedString,
-    encrypt: encrypt2,
-    decrypt: decrypt2,
-    isEncrypted: isEncrypted2,
+    encryptFn: encrypt2,
+    decryptFn: decrypt2,
+    isEncryptedFn: isEncrypted2,
   })
   customField?: string
 
   /** Per-field encrypted Number */
-  @Prop({ type: EncryptedString, originalType: Number, encrypt: encrypt2, decrypt: decrypt2, isEncrypted: isEncrypted2 })
+  @Prop({
+    type: EncryptedString,
+    originalType: Number,
+    encryptFn: encrypt2,
+    decryptFn: decrypt2,
+    isEncryptedFn: isEncrypted2,
+  })
   customNumber?: number
 
   /** Per-field encrypted Object */
-  @Prop({ type: EncryptedString, originalType: GPS, encrypt: encrypt2, decrypt: decrypt2, isEncrypted: isEncrypted2 })
+  @Prop({
+    type: EncryptedString,
+    originalType: GPS,
+    encryptFn: encrypt2,
+    decryptFn: decrypt2,
+    isEncryptedFn: isEncrypted2,
+  })
   customObject?: GPS
 
   /** Per-field encrypted Array */
-  @Prop({ type: EncryptedString, originalType: [Number], encrypt: encrypt2, decrypt: decrypt2, isEncrypted: isEncrypted2 })
+  @Prop({
+    type: EncryptedString,
+    originalType: [Number],
+    encryptFn: encrypt2,
+    decryptFn: decrypt2,
+    isEncryptedFn: isEncrypted2,
+  })
   customArray?: number[]
 
   /** Subdocument containing per-field encrypted fields */
