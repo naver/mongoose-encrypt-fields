@@ -20,14 +20,19 @@ export type MongooseFieldEncryption = (schema: Schema, options: MongooseFieldEnc
 /** Encryption mode. Defaults to `'both'`. */
 export type EncryptionMode = 'both' | 'encryptOnly' | 'decryptOnly'
 
-/** Per-field encryption functions. All three must be provided together or omitted entirely. */
+/**
+ * Per-field encryption functions. All three must be provided together or omitted entirely.
+ *
+ * Option keys are suffixed with `Fn` (e.g. `encryptFn`) to avoid conflict with
+ * Mongoose v8.15+'s built-in CSFLE `encrypt` property on `SchemaTypeOptions`.
+ */
 export interface PerFieldEncryptionOptions {
   /** Per-field string encryption function. Overrides the global encrypt for this field only. */
-  encrypt?: (value: string) => string
+  encryptFn?: (value: string) => string
   /** Per-field string decryption function. Overrides the global decrypt for this field only. */
-  decrypt?: (value: string) => string
+  decryptFn?: (value: string) => string
   /** Per-field check if string is encrypted. Overrides the global isEncrypted for this field only. */
-  isEncrypted?: (value: string) => boolean
+  isEncryptedFn?: (value: string) => boolean
 }
 
 declare module 'mongoose' {

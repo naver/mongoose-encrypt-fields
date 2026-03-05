@@ -211,14 +211,14 @@ describe('[plugin] per-field encryption', () => {
       const mongoose = require('mongoose')
       const { EncryptedString } = require('@lib')
 
-      // Only encrypt provided
+      // Only encryptFn provided
       expect(() => {
-        new mongoose.Schema({ field: { type: EncryptedString, encrypt: () => 'x' } })
+        new mongoose.Schema({ field: { type: EncryptedString, encryptFn: () => 'x' } })
       }).toThrow()
 
-      // encrypt and decrypt, but no isEncrypted
+      // encryptFn and decryptFn, but no isEncryptedFn
       expect(() => {
-        new mongoose.Schema({ field: { type: EncryptedString, encrypt: () => 'x', decrypt: () => 'x' } })
+        new mongoose.Schema({ field: { type: EncryptedString, encryptFn: () => 'x', decryptFn: () => 'x' } })
       }).toThrow()
     })
   })
